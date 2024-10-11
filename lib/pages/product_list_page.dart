@@ -18,6 +18,10 @@ class _ProductListPageState extends State<ProductListPage> {
     });
   }
 
+  Future<void> _refreshProducts() async {
+    await Provider.of<ProductProvider>(context, listen: false).fetchProducts(isRefresh: true);
+  }
+
   @override
   Widget build(BuildContext context) {
     final productProvider = Provider.of<ProductProvider>(context);
@@ -31,33 +35,36 @@ class _ProductListPageState extends State<ProductListPage> {
       body: Column(
         children: [
           Expanded(
-            child: productProvider.isLoading
-                ? Center(child: CircularProgressIndicator())
-                : productProvider.products.isEmpty
-                ? Center(child: Text('No products available'))
-                : GridView.builder(
-              padding: EdgeInsets.all(16),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 2,
-                childAspectRatio: 0.7,
-                crossAxisSpacing: 16,
-                mainAxisSpacing: 16,
+            child: RefreshIndicator(
+              onRefresh: _refreshProducts,
+              child: productProvider.isLoading
+                  ? Center(child: CircularProgressIndicator())
+                  : productProvider.products.isEmpty
+                  ? Center(child: Text('No products available'))
+                  : GridView.builder(
+                padding: EdgeInsets.all(16),
+                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  childAspectRatio: 0.7,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                ),
+                itemCount: productProvider.products.length,
+                itemBuilder: (context, index) {
+                  final product = productProvider.products[index];
+                  return GestureDetector(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductDetailPage(product: product),
+                        ),
+                      );
+                    },
+                    child: ProductItem(product: product),
+                  );
+                },
               ),
-              itemCount: productProvider.products.length,
-              itemBuilder: (context, index) {
-                final product = productProvider.products[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProductDetailPage(product: product),
-                      ),
-                    );
-                  },
-                  child: ProductItem(product: product),
-                );
-              },
             ),
           ),
           Row(
