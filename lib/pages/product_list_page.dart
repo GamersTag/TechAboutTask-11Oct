@@ -69,7 +69,6 @@ class _ProductListPageState extends State<ProductListPage> {
                     : () {
                   productProvider.fetchPreviousPage();
                 },
-                child: Text('Previous Page ${productProvider.currentPage - 1}'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepOrange,
                 ),
@@ -80,7 +79,6 @@ class _ProductListPageState extends State<ProductListPage> {
                     : () {
                   productProvider.fetchMoreProducts();
                 },
-                child: Text('Next Page ${productProvider.currentPage + 1}'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.deepOrange,
                 ),

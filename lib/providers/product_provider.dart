@@ -5,28 +5,29 @@ import '../models/product.dart';
 
 class ProductProvider with ChangeNotifier {
   List<Product> _products = [];
+  List<Product> _filteredProducts = []; // For filtered products
   bool _isLoading = false;
-  int _currentPage = 1; // Track current page
-  final int _productsPerPage = 30; // Products per page
-  final String _baseUrl = 'https://dummyjson.com/products'; // the api
+  int _currentPage = 1;
+  final int _productsPerPage = 30;
+  final String _baseUrl = 'https://dummyjson.com/products';
 
-  List<Product> get products => _products;
+  List<Product> get products => _filteredProducts.isNotEmpty ? _filteredProducts : _products;
   bool get isLoading => _isLoading;
-  int get currentPage => _currentPage; // Getter for currentPage
+  int get currentPage => _currentPage;
 
+  // Fetch products with pagination
   Future<void> fetchProducts() async {
     _isLoading = true;
     notifyListeners();
     try {
-      final response = await http.get(
-        Uri.parse('$_baseUrl?limit=$_productsPerPage&skip=${(_currentPage - 1) * _productsPerPage}'),
-      );
+      final response = await http.get(Uri.parse('$_baseUrl?limit=$_productsPerPage&skip=${(_currentPage - 1) * _productsPerPage}'));
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
         List<Product> fetchedProducts = (data['products'] as List)
             .map((productData) => Product.fromJson(productData))
             .toList();
         _products = fetchedProducts;
+        _filteredProducts = [];
       } else {
         throw Exception('Failed to load products');
       }
@@ -38,15 +39,29 @@ class ProductProvider with ChangeNotifier {
     }
   }
 
+  // Fetch next page of products
   Future<void> fetchMoreProducts() async {
-    if (_isLoading) return; // Prevent fetching if already loading
+    if (_isLoading) return;
     _currentPage++;
     await fetchProducts();
   }
 
+  // Fetch previous page of products
   Future<void> fetchPreviousPage() async {
-    if (_isLoading || _currentPage <= 1) return; // Prevent fetching if already loading or on the first page
+    if (_isLoading || _currentPage <= 1) return;
     _currentPage--;
     await fetchProducts();
+  }
+
+  // Filter products by title
+  void filterProductsByTitle(String query) {
+    if (query.isNotEmpty) {
+      _filteredProducts = _products.where((product) {
+        return product.title.toLowerCase().contains(query.toLowerCase());
+      }).toList();
+    } else {
+      _filteredProducts = [];
+    }
+    notifyListeners();
   }
 }
